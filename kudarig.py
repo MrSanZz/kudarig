@@ -15,8 +15,9 @@ Usage: miner [OPTIONS]
 
 Settings:
   --pool=Pool                   URL of mining server
-  --userworker=User.Worker      miner settings (usually used in viabtc)
-  --password=Password           user worker password
+  --userworker=User.Worker      Miner settings (usually used in viabtc)
+  --password=Password           User worker password
+  --diff=difficulty             Set the difficulty mining as you want
 """
 
 global accepted, cancelled
@@ -29,6 +30,7 @@ try:
     PORT = int(sys.argv[1].split(':')[1])
     USERNAME = "{}.{}".format(sys.argv[2].split('.')[0].replace('--userworker=', '').replace('-w', '--userworker='), sys.argv[2].split('.')[1].replace('--userworker=', '').replace('-w', '--userworker='))  # Ganti dengan username dan worker name Anda
     PASSWORD = sys.argv[3].replace('--password=', '').replace('-p', '--password=')  # Password worker (bias1anya "x")
+    DIFFICULTY = sys.argv[4].replace('--diff=', '')
 except IndexError:
     print(help)
     exit()
@@ -111,7 +113,7 @@ class StratumClient:
         try:
             self.socket.connect((self.pool, self.port))
             print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Connected to {self.pool}:{self.port}")
-            print(f"[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Start Mining.. [Username: {self.username} password: {PASSWORD}]")
+            print(f"[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Start Mining.. [Username: {self.username} password: {PASSWORD} diff: {DIFFICULTY}]")
         except Exception as e:
             print(f"\n[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Connection error: {e}")
             self.socket.close()
@@ -213,10 +215,10 @@ class StratumClient:
 
             # Check if the hash is below the target
             if int(hash_result, 16) < target:
-                print(f"\n[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Found solution: {hash_result} with nonce {nonce:08x}")
+                print(f"\n[{formatted_time}] {Color.Background.white_purple()} miner      {Color.white()} Found solution: {hash_result} with nonce {nonce:08x}")
                 self.submit_solution(job_id, nonce)
                 break
-            if hash_result.startswith("0"*6):
+            if hash_result.startswith("0"*int(DIFFICULTY)):
                 print(f"\n[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Submitting: {hash_result} with nonce {nonce:08x} [{job_id}]")
                 self.submit_solution(job_id, nonce)
             nonce += 1

@@ -8,6 +8,7 @@ import sys
 import threading
 from datetime import datetime
 import sys
+import os
 
 help = """
 Usage: miner [OPTIONS]
@@ -17,6 +18,10 @@ Settings:
   --userworker=User.Worker      miner settings (usually used in viabtc)
   --password=Password           user worker password
 """
+
+global accepted, cancelled
+accepted = 0
+cancelled = 0
 
 # Pool details (Slush Pool sebagai contoh)
 try:
@@ -110,6 +115,8 @@ class StratumClient:
         except Exception as e:
             print(f"\n[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Connection error: {e}")
             self.socket.close()
+            os.system('python3 kudarig.py')
+            exit()
             return False
         return True
 
@@ -219,6 +226,7 @@ class StratumClient:
 
     def submit_solution(self, job_id, nonce):
         """Submit the solution (nonce) to the server."""
+        global accepted, cancelled
         formatted_time = self.times()
         message = {
             "id": 3,
@@ -233,7 +241,12 @@ class StratumClient:
         }
         self.send_message(message)
         response = self.receive_message()
-        print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {response}")
+        if response:
+            accepted += 1
+            print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {response} - {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+        else:
+            cancelled += 1
+            print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {response} - {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
 
     def update_hashrates(self, a, b, nonce):
         """Calculate and display the current hashrate."""

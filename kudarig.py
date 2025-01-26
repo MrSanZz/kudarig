@@ -118,7 +118,7 @@ class StratumClient:
             except Exception as e:
                 print(f"\n[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Connection error: {e}")
                 self.socket.close()
-                os.system('python3 kudarig.py')
+                os.system(f'python3 kudarig.py --pool={POOL}:{PORT} --userworker={USERNAME} --password={PASSWORD} --diff={DIFFICULTY}')
                 exit()
                 return False
             return True
@@ -180,52 +180,56 @@ class StratumClient:
             return self.receive_message()
 
         def handle_job(self, job):
-            """Handle mining job: hash and solve the job."""
-            formatted_time = self.times()
-            job_id = job[0]
-            prevhash = job[1]
-            coinb1 = job[2]
-            coinb2 = job[3]
-            merkle_branch = job[4]
-            version = job[5]
-            nbits = job[6]
-            self.ntime = job[7]  # Update ntime from job
-            clean_jobs = job[8]
+            try:
+                """Handle mining job: hash and solve the job."""
+                formatted_time = self.times()
+                job_id = job[0]
+                prevhash = job[1]
+                coinb1 = job[2]
+                coinb2 = job[3]
+                merkle_branch = job[4]
+                version = job[5]
+                nbits = job[6]
+                self.ntime = job[7]  # Update ntime from job
+                clean_jobs = job[8]
 
-            # Target difficulty
-            def nbits_to_target(nbits):
-                exponent = int(nbits[:2], 16)
-                mantissa = int(nbits[2:], 16)
-                return mantissa * (2 ** (8 * (exponent - 3)))
+                # Target difficulty
+                def nbits_to_target(nbits):
+                    exponent = int(nbits[:2], 16)
+                    mantissa = int(nbits[2:], 16)
+                    return mantissa * (2 ** (8 * (exponent - 3)))
 
-            target = nbits_to_target(nbits)
+                target = nbits_to_target(nbits)
 
-            # Mining loop (simulasi)
-            nonce = 0
-            while True:
-                # Build block header
-                header = (
-                    version + prevhash + coinb1 + merkle_branch[0] + self.ntime + nbits +
-                    self.extranonce2 + f"{nonce:08x}"
-                )
-                header_bytes = bytes.fromhex(header)
-                hash_result = hashlib.sha256(hashlib.sha256(header_bytes).digest()).hexdigest()
+                # Mining loop (simulasi)
+                nonce = 0
+                while True:
+                    # Build block header
+                    header = (
+                        version + prevhash + coinb1 + merkle_branch[0] + self.ntime + nbits +
+                        self.extranonce2 + f"{nonce:08x}"
+                    )
+                    header_bytes = bytes.fromhex(header)
+                    hash_result = hashlib.sha256(hashlib.sha256(header_bytes).digest()).hexdigest()
 
-                # Update hash count
-                self.hash_count += 1
+                    # Update hash count
+                    self.hash_count += 1
 
-                # Check if the hash is below the target
-                if int(hash_result, 16) < target:
-                    print(f"\n[{formatted_time}] {Color.Background.white_purple()} miner      {Color.white()} Found solution: {hash_result} with nonce {nonce:08x}")
-                    self.submit_solution(job_id, nonce)
-                    break
-                if hash_result.startswith("0"*int(DIFFICULTY)):
-                    print(f"\n[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Submitting: {hash_result} with nonce {nonce:08x} [{job_id}]")
-                    self.submit_solution(job_id, nonce)
-                nonce += 1
+                    # Check if the hash is below the target
+                    if int(hash_result, 16) < target:
+                        print(f"\n[{formatted_time}] {Color.Background.white_purple()} miner      {Color.white()} Found solution: {hash_result} with nonce {nonce:08x}")
+                        self.submit_solution(job_id, nonce)
+                        break
+                    if hash_result.startswith("0"*int(DIFFICULTY)):
+                        print(f"\n[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Submitting: {hash_result} with nonce {nonce:08x} [{job_id}]")
+                        self.submit_solution(job_id, nonce)
+                    nonce += 1
 
-                # Update hashrate display
-                self.update_hashrate(hash_result, target, nonce)
+                    # Update hashrate display
+                    self.update_hashrate(hash_result, target, nonce)
+            except KeyboardInterrupt:
+                print(f"\n[{formatted_time}] {Color.Background.yellow_lime()} signal     {Color.white()} Stop signal received, exiting..")
+                exit()
 
         def submit_solution(self, job_id, nonce):
             """Submit the solution (nonce) to the server."""

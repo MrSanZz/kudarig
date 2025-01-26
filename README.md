@@ -11,6 +11,7 @@ Settings:
 
 example:
 ./kudarig --pool=bitcoin.viabtc.io:3333 --userworker=JGXP.PC --password=123 --diff=6
+Tested POOL: viabtc and f2pool
 
 diff 6= 000000e95e59950522435a6f0383c539f091c0d225a49a043b9dcade85fc6836 (6 zero's in hash)
 

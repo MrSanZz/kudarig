@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 
-import socket
-import json
-import hashlib
-import time
-import sys
-import threading
-from datetime import datetime
-import sys
-import os
+try:
+    import socket
+    import json
+    import hashlib
+    import time
+    import sys
+    import threading
+    from datetime import datetime
+    import sys
+    import os
+    from sys import stdout
+    from colorama import init
+except:
+    import os
+    os.system('pip3 install hashlib')
+    os.system('pip3 install colorama')
+    os.system('python3 kudarig.py')
+
+init(autoreset=True)
 
 help = """
 Usage: miner [OPTIONS]
@@ -26,12 +36,13 @@ cancelled = 0
 
 # Pool details (Slush Pool sebagai contoh)
 try:
-    POOL = sys.argv[1].split(':')[0].replace('--pool=', '').replace('-o', '--pool=')
+    URL = sys.argv[1].replace('stratum+tcp://', '') if 'stratum+tcp://' in sys.argv[1] else sys.argv[1].replace('stratum+ssl://', '')
+    POOL = URL.replace('--pool=', '').replace('-o', '--pool=').split(':')[0]
     PORT = int(sys.argv[1].split(':')[1])
     USERNAME = "{}.{}".format(sys.argv[2].split('.')[0].replace('--userworker=', '').replace('-w', '--userworker='), sys.argv[2].split('.')[1].replace('--userworker=', '').replace('-w', '--userworker='))  # Ganti dengan username dan worker name Anda
     PASSWORD = sys.argv[3].replace('--password=', '').replace('-p', '--password=')  # Password worker (bias1anya "x")
     DIFFICULTY = sys.argv[4].replace('--diff=', '')
-except IndexError:
+except IndexError as e:
     print(help)
     exit()
 
@@ -249,11 +260,21 @@ class StratumClient:
             self.send_message(message)
             response = self.receive_message()
             if response:
-                accepted += 1
-                print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {response} - {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                if response['result'] != False:
+                    accepted += 1
+                    print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                elif 'True' in response:
+                    accepted += 1
+                    print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                elif response['result'] == False:
+                    cancelled += 1
+                    print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                elif 'False' in response:
+                    cancelled += 1
+                    print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
             else:
                 cancelled += 1
-                print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {response} - {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
 
         def update_hashrates(self, a, b, nonce):
             """Calculate and display the current hashrate."""
@@ -342,6 +363,7 @@ class StratumClient:
 
 # Main function
 def main():
+    stdout.flush()
     client = StratumClient(POOL, PORT, USERNAME, PASSWORD)
     client.start()
 

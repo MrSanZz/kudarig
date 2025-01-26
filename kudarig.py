@@ -261,14 +261,15 @@ class StratumClient:
             self.send_message(message)
             response = self.receive_message()
             if response:
-                if response['result'] != False:
-                    accepted += 1
-                    print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                if "'result'" in response:
+                    if response['result'] != False:
+                        accepted += 1
+                        print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
+                    elif response['result'] == False:
+                        cancelled += 1
+                        print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
                 elif 'True' in response:
                     accepted += 1
-                    print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
-                elif response['result'] == False:
-                    cancelled += 1
                     print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
                 elif 'False' in response:
                     cancelled += 1

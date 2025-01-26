@@ -37,8 +37,9 @@ cancelled = 0
 # Pool details (Slush Pool sebagai contoh)
 try:
     URL = sys.argv[1].replace('stratum+tcp://', '') if 'stratum+tcp://' in sys.argv[1] else sys.argv[1].replace('stratum+ssl://', '')
-    POOL = URL.replace('--pool=', '').replace('-o', '--pool=').split(':')[0]
-    PORT = int(sys.argv[1].split(':')[1])
+    POOLS = URL.replace('--pool=', '').replace('-o', '--pool=').split(':')
+    PORT = int(POOLS[1])
+    POOL = POOLS[0]
     USERNAME = "{}.{}".format(sys.argv[2].split('.')[0].replace('--userworker=', '').replace('-w', '--userworker='), sys.argv[2].split('.')[1].replace('--userworker=', '').replace('-w', '--userworker='))  # Ganti dengan username dan worker name Anda
     PASSWORD = sys.argv[3].replace('--password=', '').replace('-p', '--password=')  # Password worker (bias1anya "x")
     DIFFICULTY = sys.argv[4].replace('--diff=', '')

@@ -1,4 +1,3 @@
-hashlib
 pycryptodome
 argparse
 colorama

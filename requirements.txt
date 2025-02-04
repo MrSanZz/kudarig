@@ -1,0 +1,7 @@
+hashlib
+pycryptodome
+argparse
+colorama
+keyboard
+pynput
+psutil

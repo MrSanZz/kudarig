@@ -20,7 +20,7 @@ except:
     os.system('pip3 install colorama' if os.name == 'nt' else 'pip3 install colorama --break-system-packages')
     os.system('pip3 install argparse' if os.name == 'nt' else 'pip3 install argparse --break-system-packages')
     os.system('pip3 install psutil' if os.name == 'nt' else 'pip3 install psutil --break-system-packages')
-    os.system('python3 kudarig.py')
+    os.system('python3 kudarig_andro.py')
 
 init(autoreset=True)
 
@@ -130,7 +130,7 @@ class StratumClient:
             except Exception as e:
                 print(f"\n[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Connection error: {e}")
                 self.socket.close()
-                os.system(f'python3 kudarig.py --pool={POOL}:{PORT} --userworker={USERNAME} --password={PASSWORD} --diff={DIFFICULTY}')
+                os.system(f'python3 kudarig_andro.py --pool={POOL}:{PORT} --userworker={USERNAME} --password={PASSWORD} --diff={DIFFICULTY}')
                 exit()
                 return False
             return True

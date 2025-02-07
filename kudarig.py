@@ -30,8 +30,11 @@ try:
     import argparse
     import psutil
     import random
-    import keyboard
-    from pynput import keyboard as keyboard1
+    device = 1 if os.name == 'nt' else 0
+    if device == 1:
+        import keyboard
+    else:
+        from pynput import keyboard as keyboard1
 except ImportError:
     import os
     device = check()
@@ -39,7 +42,6 @@ except ImportError:
     os.system('pip3 install argparse' if os.name == 'nt' else 'pip3 install argparse --break-system-packages')
     os.system('pip3 install psutil' if os.name == 'nt' else 'pip3 install psutil --break-system-packages')
     os.system('pip3 install keyboard' if os.name == 'nt' or device == 0 else 'pip3 install pynput --break-system-packages')
-    print(device)
 except:
     pass
 

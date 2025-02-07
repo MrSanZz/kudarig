@@ -31,7 +31,7 @@ try:
     import psutil
     import random
     import keyboard
-    from pynput import keyboard
+    from pynput import keyboard as keyboard1
 except ImportError:
     import os
     device = check()
@@ -264,7 +264,7 @@ class StratumClient:
                 nonce = 0
 
                 if self.os == 0:
-                    with keyboard.Listener(on_press=self.print_cpu_stats) as listener:
+                    with keyboard1.Listener(on_press=self.print_cpu_stats) as listener:
                         listener.join()
                 else:
                     if keyboard:

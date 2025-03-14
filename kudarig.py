@@ -83,6 +83,22 @@ except IndexError as e:
     else:
         print(e)
 
+import requests
+import time
+from datetime import datetime
+
+global_last_block_hash = None
+
+class Color:
+    class Background:
+        @staticmethod
+        def white_purple():
+            return "\033[45m"  # Ungu dengan latar putih
+
+    @staticmethod
+    def white():
+        return "\033[97m"
+
 def block_listener():
     """
     Fungsi untuk mengambil latest block hash dari Blockchain.info setiap 30 detik.
@@ -92,39 +108,38 @@ def block_listener():
 
     while True:
         now = datetime.now()
-        formatted_time = now.strftime("%Y %H:%M:%S")
+        formatted_time = now.strftime(" %Y %H:%M:%S ")  # Dikembalikan ke format asli
         try:
             response = requests.get(url, timeout=10)
             if response.status_code != 200:
-                print(f"[{formatted_time}] listener Error: {response.status_code}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error: {response.status_code}")
                 time.sleep(30)
                 continue
 
             try:
                 data = response.json()
             except ValueError:
-                print(f"[{formatted_time}] listener Invalid JSON: {response.text}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Invalid JSON: {response.text}")
                 time.sleep(30)
                 continue
 
             updated_hash = data.get("hash")
             if not updated_hash:
-                print(f"[{formatted_time}] listener No hash in response: {data}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} No hash in response: {data}")
                 time.sleep(30)
                 continue
 
             if global_last_block_hash is None:
-                print(f"[{formatted_time}] listener Initialized block hash: {updated_hash}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Initialized block hash: {updated_hash}")
                 global_last_block_hash = updated_hash
             elif global_last_block_hash != updated_hash:
-                print(f"[{formatted_time}] {Color.Background.white_purple()} listener {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}")
                 global_last_block_hash = updated_hash
 
         except Exception as e:
-            print(f"[{formatted_time}] listener Error fetching latest block: {e}")
+            print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error fetching latest block: {e}")
 
         time.sleep(30)
-        
 
 class Color:
     def red():

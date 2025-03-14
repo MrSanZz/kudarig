@@ -23,25 +23,31 @@ try:
     import sys
     import threading
     from datetime import datetime
-    import sys
     from sys import stdout
     from colorama import init
     import os
     import argparse
     import psutil
     import random
+    import requests
+    import os
     device = 1 if os.name == 'nt' else 0
-    if device == 1:
-        import keyboard
+    ph = check()
+    if ph != 0:
+        if device == 1:
+            import keyboard
+        else:
+            from pynput import keyboard as keyboard1
     else:
-        from pynput import keyboard as keyboard1
+        import tty
+        import termios
 except ImportError:
     import os
     device = check()
-    os.system('pip3 install colorama' if os.name == 'nt' else 'pip3 install colorama --break-system-packages')
-    os.system('pip3 install argparse' if os.name == 'nt' else 'pip3 install argparse --break-system-packages')
-    os.system('pip3 install psutil' if os.name == 'nt' else 'pip3 install psutil --break-system-packages')
-    os.system('pip3 install keyboard' if os.name == 'nt' or device == 0 else 'pip3 install pynput --break-system-packages')
+    os.system('pip3 install colorama' if os.name == 'nt' else 'pip3 install colorama')
+    os.system('pip3 install argparse' if os.name == 'nt' else 'pip3 install argparse')
+    os.system('pip3 install psutil' if os.name == 'nt' else 'pip3 install psutil')
+    os.system('pip3 install keyboard' if os.name == 'nt' or device == 0 else 'pip3 install pynput')
 except:
     pass
 
@@ -56,9 +62,10 @@ parser.add_argument('-d', '--difficulty', type=int, help='Difficulty hash', defa
 parser.add_argument('-s', '--cpu', type=int, help='CPU Used for mining process', required=True, metavar='4')
 args = parser.parse_args()
 
-global accepted, cancelled
+global accepted, cancelled, global_last_block_hash
 accepted = 0
 cancelled = 0
+global_last_block_hash = None
 
 # Pool details (Slush Pool sebagai contoh)
 try:
@@ -75,6 +82,32 @@ except IndexError as e:
         raise(Exception, 'An error occured at pool url, have you type it correctly?')
     else:
         print(e)
+
+def block_listener():
+    """
+    Fungsi untuk mengambil latest block hash dari Blockchain.info setiap 30 detik.
+    """
+    global global_last_block_hash
+    url = "https://blockchain.info/latestblock"
+    now = datetime.now()
+    formatted_time = now.strftime(" %Y %H:%M:%S ")
+    while True:
+        try:
+            response = requests.get(url, timeout=10)
+            data = response.json()
+            updated_hash = data.get("hash")
+            if global_last_block_hash is not None:
+                if global_last_block_hash != updated_hash:
+                    print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}")
+                    global_last_block_hash = updated_hash
+                elif updated_hash == global_last_block_hash:
+                    continue
+            else:
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Initialized block hash: {updated_hash}")
+                global_last_block_hash = updated_hash
+        except Exception as e:
+            print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error fetching latest block: {e}")
+        time.sleep(30)
 
 class Color:
     def red():
@@ -261,18 +294,26 @@ class StratumClient:
                     return mantissa * (2 ** (8 * (exponent - 3)))
 
                 target = nbits_to_target(nbits)
-
-                # Mining loop (simulasi)
                 nonce = 0
 
-                if self.os == 0:
-                    with keyboard1.Listener(on_press=self.print_cpu_stats) as listener:
-                        listener.join()
+                phone_or_no = check()
+                if phone_or_no != 0:
+                    if self.os == 0:
+                        with keyboard1.Listener(on_press=self.print_cpu_stats) as listener:
+                            listener.join()
+                    else:
+                        if keyboard:
+                            keyboard.on_press(self.print_cpu_stats)
                 else:
-                    if keyboard:
-                        keyboard.on_press(self.print_cpu_stats)
+                    pass
                 while True:
                     try:
+                        if prevhash == None:
+                            if global_last_block_hash != None:
+                                prevhash = global_last_block_hash
+                            else:
+                                time.sleep(1)
+                                continue
                         header = (
                             version + prevhash + coinb1 + merkle_branch[0] + self.ntime + nbits +
                             self.extranonce2 + f"{nonce:08x}"
@@ -295,6 +336,8 @@ class StratumClient:
                             rx_nonce = 2
                             if hash_result.startswith("0"*int(DIFFICULTY)):
                                 rx_nonce += 2
+                                nonce = random.randint(0, 0XFFFFFF * rx_nonce)
+                            else:
                                 nonce = random.randint(0, 0XFFFFFF * rx_nonce)
                         elif ALGO == 'basic':
                             nonce += 1
@@ -320,6 +363,15 @@ class StratumClient:
                 print(f"\n[{formatted_time}] {Color.Background.yellow_lime()} signal     {Color.white()} Stop signal received, exiting..")
                 exit()
 
+        def get_key(self):
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            try:
+                tty.setraw(sys.stdin.fileno())
+                return sys.stdin.read(1)
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
         def submit_solution(self, job_id, nonce):
             """Submit the solution (nonce) to the server."""
             global accepted, cancelled
@@ -344,10 +396,10 @@ class StratumClient:
                 if isinstance(item_terakhir, list):
                     item_terakhir = item_terakhir[-1]
                 print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit response: {response}")
-                if item_terakhir != False:
+                if item_terakhir != False and 'false' not in response:
                     accepted += 1
                     print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit result: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
-                elif item_terakhir == False:
+                elif item_terakhir != True and 'true' not in response:
                     cancelled += 1
                     print(f"[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} Submit result: {Color.Background.green_purple()}Accepted {accepted}{Color.white()}/{Color.red()}{cancelled}{Color.white()}")
                 else:
@@ -371,13 +423,13 @@ class StratumClient:
             if self.hash_count % 1000000 == 0:
                 hashrate = self.hash_count / elapsed_time
                 hashrate_mhs = hashrate / 1e6
-                sys.stdout.write(f"\r[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Speed: {hashrate:.2f} // {hashrate_mhs:.2f} MH/s")
+                sys.stdout.write(f"\r[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Speed: {hashrate:.2f} // {hashrate_mhs:.2f} MH/s - Last Nonce {nonce}")
                 sys.stdout.flush()
 
         def print_cpu_stats(self, event):
             formatted_time = self.times()
             try:
-                if event.name == 'h':
+                if event.name == 'h' or self.get_key == 'h':
                     total_hashes = sum(self.cpu_hashes)
                     print('')
                     for i, hashes in enumerate(self.cpu_hashes):
@@ -458,10 +510,15 @@ class StratumClient:
 
 def main():
     stdout.flush()
-    p = psutil.Process(os.getpid())
-    p.nice(psutil.REALTIME_PRIORITY_CLASS if os.name == 'nt' else -40)
+    try:
+        p = psutil.Process(os.getpid())
+        p.nice(psutil.REALTIME_PRIORITY_CLASS if os.name == 'nt' else -40)
+    except:
+        pass
 
     # Inisialisasi StratumClient hanya sekali
+    listener_thread = threading.Thread(target=block_listener, daemon=True)
+    listener_thread.start()
     client = StratumClient(POOL, PORT, USERNAME, PASSWORD)
     t = threading.Thread(target=client.start)
     t.start()

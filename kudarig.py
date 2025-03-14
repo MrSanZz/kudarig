@@ -112,32 +112,32 @@ def block_listener():
         try:
             response = requests.get(url, timeout=10)
             if response.status_code != 200:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error: {response.status_code}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error: {response.status_code}\n")
                 time.sleep(30)
                 continue
 
             try:
                 data = response.json()
             except ValueError:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Invalid JSON: {response.text}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Invalid JSON: {response.text}\n")
                 time.sleep(30)
                 continue
 
             updated_hash = data.get("hash")
             if not updated_hash:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} No hash in response: {data}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} No hash in response: {data}\n")
                 time.sleep(30)
                 continue
 
             if global_last_block_hash is None:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Initialized block hash: {updated_hash}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Initialized block hash: {updated_hash}\n")
                 global_last_block_hash = updated_hash
             elif global_last_block_hash != updated_hash:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}\n")
                 global_last_block_hash = updated_hash
 
         except Exception as e:
-            print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error fetching latest block: {e}")
+            print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error fetching latest block: {e}\n")
 
         time.sleep(30)
 

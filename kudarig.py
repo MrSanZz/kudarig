@@ -34,13 +34,12 @@ try:
     device = 1 if os.name == 'nt' else 0
     ph = check()
     if ph != 0:
-        if device == 1:
-            import keyboard
-        else:
+        if os.name == 'posix':
             from pynput import keyboard as keyboard1
+        else:
+            import keyboard
     else:
-        import tty
-        import termios
+        import tty, termios
 except ImportError:
     import os
     device = check()
@@ -60,6 +59,7 @@ parser.add_argument('-u', '--userworker',type=str, help='Mining server username 
 parser.add_argument('-p', '--password', type=str, help='Pool password', default='x', metavar='123')
 parser.add_argument('-d', '--difficulty', type=int, help='Difficulty hash', default=8, metavar='16')
 parser.add_argument('-s', '--cpu', type=int, help='CPU Used for mining process', required=True, metavar='4')
+parser.add_argument('-nl', '--noncelength', type=int, help='Nonce length to get more hash probabilities', required=True, metavar='2')
 args = parser.parse_args()
 
 global accepted, cancelled, global_last_block_hash
@@ -78,26 +78,10 @@ try:
     CPU = int(args.cpu)
     ALGO = str(args.algo)
 except IndexError as e:
-    if 'PORT' in e:
-        raise(Exception, 'An error occured at pool url, have you type it correctly?')
+    if 'PORT' in str(e):
+        print("[!] Have you checked the url correctly? (problem: No port detected)")
     else:
         print(e)
-
-import requests
-import time
-from datetime import datetime
-
-global_last_block_hash = None
-
-class Color:
-    class Background:
-        @staticmethod
-        def white_purple():
-            return "\033[45m"  # Ungu dengan latar putih
-
-    @staticmethod
-    def white():
-        return "\033[97m"
 
 def block_listener():
     """
@@ -551,7 +535,7 @@ def main():
     stdout.flush()
     try:
         p = psutil.Process(os.getpid())
-        p.nice(psutil.REALTIME_PRIORITY_CLASS if os.name == 'nt' else -40)
+        p.nice(psutil.REALTIME_PRIORITY_CLASS if os.name == 'nt' else -20)
     except:
         pass
 

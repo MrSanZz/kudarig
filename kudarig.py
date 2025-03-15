@@ -59,7 +59,7 @@ parser.add_argument('-u', '--userworker',type=str, help='Mining server username 
 parser.add_argument('-p', '--password', type=str, help='Pool password', default='x', metavar='123')
 parser.add_argument('-d', '--difficulty', type=int, help='Difficulty hash', default=8, metavar='16')
 parser.add_argument('-s', '--cpu', type=int, help='CPU Used for mining process', required=True, metavar='4')
-parser.add_argument('-nl', '--noncelength', type=int, help='Nonce length to get more hash probabilities', required=True, metavar='2')
+parser.add_argument('-nl', '--noncelength', type=int, help='Nonce length to get more hash probabilities', required=False, metavar='2')
 args = parser.parse_args()
 
 global accepted, cancelled, global_last_block_hash
@@ -77,6 +77,7 @@ try:
     DIFFICULTY = int(args.difficulty)
     CPU = int(args.cpu)
     ALGO = str(args.algo)
+    NONCE_LENGTH = int(args.noncelength)
 except IndexError as e:
     if 'PORT' in str(e):
         print("[!] Have you checked the url correctly? (problem: No port detected)")
@@ -356,7 +357,7 @@ class StratumClient:
                             self.submit_solution(job_id, nonce)
 
                         if ALGO == 'rx/0':
-                            rx_nonce = 2
+                            rx_nonce = NONCE_LENGTH
                             if hash_result.startswith("0"*int(DIFFICULTY)):
                                 rx_nonce += 2
                                 nonce = random.randint(0, 0XFFFFFF * rx_nonce)

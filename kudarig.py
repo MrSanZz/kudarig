@@ -112,32 +112,38 @@ def block_listener():
         try:
             response = requests.get(url, timeout=10)
             if response.status_code != 200:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error: {response.status_code}\n")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error: {response.status_code}")
+                print('')
                 time.sleep(30)
                 continue
 
             try:
                 data = response.json()
             except ValueError:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Invalid JSON: {response.text}\n")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Invalid JSON: {response.text}")
+                print('')
                 time.sleep(30)
                 continue
 
             updated_hash = data.get("hash")
             if not updated_hash:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} No hash in response: {data}\n")
-                time.sleep(30)
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} No hash in response: {data}")
+                print('')
+                time.sleep(2)
                 continue
 
             if global_last_block_hash is None:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Initialized block hash: {updated_hash}\n")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Initialized block hash: {updated_hash}")
+                print('')
                 global_last_block_hash = updated_hash
             elif global_last_block_hash != updated_hash:
-                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}\n")
+                print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Updated block hash: {global_last_block_hash} -> {updated_hash}")
+                print('')
                 global_last_block_hash = updated_hash
 
         except Exception as e:
-            print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error fetching latest block: {e}\n")
+            print(f"\r[{formatted_time}] {Color.Background.white_purple()} listener   {Color.white()} Error fetching latest block: {e}")
+            print('')
 
         time.sleep(30)
 
@@ -213,7 +219,7 @@ class StratumClient:
             self.job = None
             self.extranonce2 = "0"*6  # Default extranonce2
             self.ntime = None  # Akan diisi dari job
-            self.difficulty = 1  # Default difficulty
+            self.difficulty = 4  # Default difficulty
             self.hash_count = 0  # Menghitung jumlah hash per detik
             self.start_time = time.time()  # Waktu mulai mining
             self.cpu_hashes = [0]*CPU  # Jumlah hash untuk setiap CPU
@@ -360,10 +366,11 @@ class StratumClient:
                         if int(hash_result, 16) < target:
                             print(f"\n[{formatted_time}] {Color.Background.white_purple()} miner      {Color.white()} Found solution: {hash_result} with nonce {nonce:08x}")
                             self.submit_solution(job_id, nonce)
-                            break
+
                         if hash_result.startswith("0"*int(DIFFICULTY)):
                             print(f"\n[{formatted_time}] {Color.Background.white_lime()} miner      {Color.white()} Submitting: {hash_result} with nonce {nonce:08x} [{job_id}]")
                             self.submit_solution(job_id, nonce)
+
                         if ALGO == 'rx/0':
                             rx_nonce = 2
                             if hash_result.startswith("0"*int(DIFFICULTY)):
@@ -505,6 +512,8 @@ class StratumClient:
                 if response:
                     # Process the mining job
                     if response.get("method") == "mining.notify":
+                        print(f"\r[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} New job received")
+                        print('')
                         job = response["params"]
                         self.handle_job(job)
 
@@ -530,7 +539,7 @@ class StratumClient:
                 message = {
                     "id": 4,  # ID pesan unik
                     "method": "mining.hashrate",
-                    "params": [hashrate_mhs, USERNAME]
+                    "params": [hashrate_mhs, USERNAME, PASSWORD]
                 }
                 self.send_message(message)
     except KeyboardInterrupt:

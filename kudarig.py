@@ -512,8 +512,6 @@ class StratumClient:
                 if response:
                     # Process the mining job
                     if response.get("method") == "mining.notify":
-                        print(f"\r[{formatted_time}] {Color.Background.white_purple()} connection {Color.white()} New job received")
-                        print('')
                         job = response["params"]
                         self.handle_job(job)
 
@@ -539,7 +537,7 @@ class StratumClient:
                 message = {
                     "id": 4,  # ID pesan unik
                     "method": "mining.hashrate",
-                    "params": [hashrate_mhs, USERNAME, PASSWORD]
+                    "params": [hashrate_mhs, USERNAME]
                 }
                 self.send_message(message)
     except KeyboardInterrupt:
